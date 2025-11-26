@@ -1,20 +1,81 @@
+# Lumina Canvas
+
 <div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+  <h1 align="center">Lumina Canvas</h1>
+  <p align="center">
+    A modern, real-time collaborative whiteboard application built with React, Fabric.js, and Google Gemini AI.
+  </p>
 </div>
 
-# Run and deploy your AI Studio app
+## 🚀 Features
 
-This contains everything you need to run your app locally.
+- **Real-time Collaboration**: Draw and interact with others in real-time.
+- **Advanced Tools**:
+  - **Pen**: Freehand drawing with adjustable stroke width and color.
+  - **Shapes**: Rectangle, Circle, and Line tools.
+  - **Arrow**: Custom arrow tool for diagrams.
+  - **Text**: Add and edit text on the canvas.
+  - **Eraser**: Erase objects or paint over them.
+  - **Pan & Zoom**: Navigate infinite canvas with Move tool or Ctrl+Scroll.
+- **AI Integration**: Generate SVG illustrations from text prompts using Google Gemini API.
+- **Export**: Save your creations as PNG, JPG, or SVG.
+- **Modern UI**: Glassmorphism design, responsive toolbar, and dark mode aesthetic.
+- **Pixel Perfect**: Optimized for Mobile, Tablet, and Desktop.
 
-View your app in AI Studio: https://ai.studio/apps/temp/2
+## 🛠️ Tech Stack
 
-## Run Locally
+- **Frontend**: React 19, Vite, TypeScript
+- **Canvas Engine**: Fabric.js (v5)
+- **Styling**: Tailwind CSS, Framer Motion
+- **AI**: Google Gemini API (`@google/genai`)
+- **Utilities**: `uuid`, `unique-names-generator`
 
-**Prerequisites:**  Node.js
+## 📦 Installation
 
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd lumina-canvas
+   ```
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Configure Environment**
+   Create a `.env.local` file in the root directory and add your Gemini API key:
+   ```env
+   VITE_GEMINI_API_KEY=your_api_key_here
+   ```
+
+4. **Run Locally**
+   ```bash
+   npm run dev
+   ```
+   Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+## 🎮 Usage
+
+| Tool | Shortcut | Description |
+|------|----------|-------------|
+| **Select** | `V` | Select and move objects |
+| **Pan** | `Space` / Hand Icon | Drag to move canvas view |
+| **Pen** | `P` | Freehand drawing |
+| **Eraser** | `E` | Erase content |
+| **Rectangle** | `R` | Draw rectangles |
+| **Circle** | `C` | Draw circles |
+| **Line** | `L` | Draw straight lines |
+| **Arrow** | `A` | Draw arrows |
+| **Text** | `T` | Add text |
+| **Undo** | `Ctrl + Z` | Undo last action |
+| **Redo** | `Ctrl + Y` | Redo last action |
+| **Zoom** | `Ctrl + Scroll` | Zoom in/out |
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## 📄 License
+
+This project is licensed under the MIT License.

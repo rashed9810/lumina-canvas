@@ -10,7 +10,7 @@ import { broadcastService } from './services/broadcastService';
 import { generateSVGFromPrompt } from './services/geminiService';
 
 const App: React.FC = () => {
-  const [activeTool, setActiveTool] = useState<Tool>(Tool.PEN);
+  const [activeTool, setActiveTool] = useState<Tool | null>(null);
   const [activeColor, setActiveColor] = useState<string>(COLORS[4]); // Default blue
   const [strokeWidth, setStrokeWidth] = useState<number>(3);
   const [remoteCursors, setRemoteCursors] = useState<Record<string, UserCursor>>({});
@@ -80,11 +80,6 @@ const App: React.FC = () => {
           setExportTrigger(prev => prev + 1);
         }
       }
-      
-      // Delete key for removing selected objects
-      if (e.key === 'Delete' || e.key === 'Backspace') {
-        // This will be handled by CanvasBoard
-      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
@@ -112,12 +107,7 @@ const App: React.FC = () => {
 
   const handleAIRequest = async (prompt: string) => {
     try {
-      // Validate prompt
-      if (!prompt || prompt.trim().length === 0) {
-        console.error('Invalid prompt provided');
-        return;
-      }
-
+      if (!prompt || prompt.trim().length === 0) return;
       const svg = await generateSVGFromPrompt(prompt);
       if (svg) {
         setSvgToInject(svg);
@@ -131,29 +121,28 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="h-screen w-screen bg-slate-900 overflow-hidden relative text-slate-200 select-none">
+    <div className="h-screen w-screen bg-slate-900 overflow-hidden relative text-slate-200 select-none font-sans">
       
       {/* Header / Status */}
-      <div className="absolute top-4 left-6 z-10 pointer-events-none">
-        <h1 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2">
-          <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-blue-500">
+      <div className="absolute top-6 left-6 z-40 pointer-events-none">
+        <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-3 drop-shadow-lg">
+          <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 animate-gradient-x">
             Lumina
           </span>
-          <span className="text-slate-500 text-sm font-medium border border-slate-700 px-2 py-0.5 rounded-md">Beta</span>
+          <span className="text-slate-400 text-xs font-medium border border-slate-600/50 bg-slate-800/50 px-2 py-0.5 rounded-full backdrop-blur-sm">Beta 2.0</span>
         </h1>
-        <div className="mt-2 flex items-center gap-2 opacity-70 text-sm">
+        <div className="mt-2 flex items-center gap-2 opacity-80 text-sm bg-slate-800/40 backdrop-blur-md px-3 py-1.5 rounded-full w-max border border-slate-700/30">
            <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)] animate-pulse"></div>
            <span>Online as <strong style={{color: userColor}}>{userName}</strong></span>
-        </div>
-        <div className="mt-1 text-xs text-slate-500">
-          {Object.keys(remoteCursors).length} other users active
+           <span className="text-slate-600 mx-1">•</span>
+           <span className="text-slate-400 text-xs">{Object.keys(remoteCursors).length} active</span>
         </div>
       </div>
       
-      {/* Note about collaboration */}
-      <div className="absolute top-4 right-6 z-10 max-w-xs text-right pointer-events-none">
-         <p className="text-xs text-slate-600">
-           Open this URL in a second tab to test multiplayer sync.
+      {/* Collaboration Hint */}
+      <div className="absolute top-6 right-6 z-40 max-w-xs text-right pointer-events-none opacity-60 hover:opacity-100 transition-opacity">
+         <p className="text-xs text-slate-400 bg-slate-800/40 backdrop-blur px-3 py-1.5 rounded-full border border-slate-700/30">
+           Open in new tab to test sync <i className="fa-solid fa-arrow-up-right-from-square ml-1"></i>
          </p>
       </div>
 

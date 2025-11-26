@@ -1,11 +1,14 @@
 export enum Tool {
   SELECT = 'SELECT',
   PEN = 'PEN',
+  ERASER = 'ERASER',
   RECTANGLE = 'RECTANGLE',
   CIRCLE = 'CIRCLE',
-  LINE = 'LINE',
   TEXT = 'TEXT',
-  ERASER = 'ERASER'
+  LINE = 'LINE',
+  ARROW = 'ARROW',
+  MOVE = 'MOVE',
+  ZOOM = 'ZOOM'
 }
 
 export interface UserCursor {
