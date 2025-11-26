@@ -7,7 +7,7 @@
   </p>
 </div>
 
-## 🚀 Features
+##  Features
 
 - **Real-time Collaboration**: Draw and interact with others in real-time.
 - **Advanced Tools**:
@@ -22,7 +22,7 @@
 - **Modern UI**: Glassmorphism design, responsive toolbar, and dark mode aesthetic.
 - **Pixel Perfect**: Optimized for Mobile, Tablet, and Desktop.
 
-## 🛠️ Tech Stack
+##  Tech Stack
 
 - **Frontend**: React 19, Vite, TypeScript
 - **Canvas Engine**: Fabric.js (v5)
@@ -30,7 +30,7 @@
 - **AI**: Google Gemini API (`@google/genai`)
 - **Utilities**: `uuid`, `unique-names-generator`
 
-## 📦 Installation
+##  Installation
 
 1. **Clone the repository**
    ```bash
@@ -55,7 +55,7 @@
    ```
    Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-## 🎮 Usage
+##  Usage
 
 | Tool | Shortcut | Description |
 |------|----------|-------------|
@@ -72,10 +72,6 @@
 | **Redo** | `Ctrl + Y` | Redo last action |
 | **Zoom** | `Ctrl + Scroll` | Zoom in/out |
 
-## 🤝 Contributing
+##  Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
-
-## 📄 License
-
-This project is licensed under the MIT License.
