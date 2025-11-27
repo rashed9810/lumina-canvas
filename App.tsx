@@ -9,6 +9,8 @@ import { COLORS } from './constants';
 import { broadcastService } from './services/broadcastService';
 import { generateSVGFromPrompt } from './services/geminiService';
 
+import { ToastContainer, showToast } from './components/Toast';
+
 const App: React.FC = () => {
   const [activeTool, setActiveTool] = useState<Tool | null>(null);
   const [activeColor, setActiveColor] = useState<string>(COLORS[4]); // Default blue
@@ -42,6 +44,8 @@ const App: React.FC = () => {
             lastUpdate: Date.now()
           }
         }));
+      } else if (event.type === BroadcastEventType.CLEAR) {
+        showToast('Canvas cleared', 'info');
       }
     };
 
@@ -100,9 +104,8 @@ const App: React.FC = () => {
   };
 
   const handleClear = () => {
-    if (window.confirm('Are you sure you want to clear the canvas for everyone?')) {
-      setClearTrigger(prev => prev + 1);
-    }
+    // Confirmation is now handled in Toolbar via ConfirmationModal
+    setClearTrigger(prev => prev + 1);
   };
 
   const handleAIRequest = async (prompt: string) => {
@@ -111,12 +114,13 @@ const App: React.FC = () => {
       const svg = await generateSVGFromPrompt(prompt);
       if (svg) {
         setSvgToInject(svg);
+        showToast('Image generated successfully', 'success');
       } else {
-        alert("Could not generate image. Please check your Gemini API key is set in .env.local and try again.");
+        showToast("Could not generate image. Check API key.", 'error');
       }
     } catch (error) {
       console.error('Error in AI request:', error);
-      alert("Error generating image. Please try again later.");
+      showToast("Error generating image.", 'error');
     }
   };
 
@@ -180,6 +184,8 @@ const App: React.FC = () => {
         onExport={() => setExportTrigger(p => p + 1)}
         onAIRequest={handleAIRequest}
       />
+      
+      <ToastContainer />
     </div>
   );
 };

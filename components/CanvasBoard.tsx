@@ -133,7 +133,8 @@ export const CanvasBoard: React.FC<CanvasBoardProps> = ({
         userId,
         payload: null
       });
-      clearHistory();
+      // Instead of clearing history, we save the empty state so it can be undone
+      saveHistory();
     }
   }, [clearTrigger]);
 

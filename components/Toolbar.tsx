@@ -1,7 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Tool } from '../types';
 import { COLORS } from '../constants';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ConfirmationModal } from './ConfirmationModal';
+import { analyticsService } from '../services/analyticsService';
 
 interface ToolbarProps {
   activeTool: Tool | null;
@@ -34,21 +37,91 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   const [isClearModalOpen, setIsClearModalOpen] = useState(false);
   const [aiPrompt, setAiPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
+  
+  // Color Picker State
+  const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
+  const [pickerPos, setPickerPos] = useState({ left: 0, bottom: 0 });
+  const colorPickerRef = useRef<HTMLDivElement>(null);
+  const popupRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        isColorPickerOpen &&
+        colorPickerRef.current &&
+        !colorPickerRef.current.contains(event.target as Node) &&
+        popupRef.current &&
+        !popupRef.current.contains(event.target as Node)
+      ) {
+        setIsColorPickerOpen(false);
+      }
+    };
+
+    const handleScrollOrResize = () => {
+      if (isColorPickerOpen) {
+        setIsColorPickerOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    window.addEventListener('resize', handleScrollOrResize);
+    window.addEventListener('scroll', handleScrollOrResize, true);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      window.removeEventListener('resize', handleScrollOrResize);
+      window.removeEventListener('scroll', handleScrollOrResize, true);
+    };
+  }, [isColorPickerOpen]);
+
+  const toggleColorPicker = () => {
+    if (!isColorPickerOpen && colorPickerRef.current) {
+      const rect = colorPickerRef.current.getBoundingClientRect();
+      setPickerPos({
+        left: rect.left,
+        bottom: window.innerHeight - rect.top + 10
+      });
+    }
+    setIsColorPickerOpen(!isColorPickerOpen);
+  };
+
+  const handleToolSelect = (tool: Tool) => {
+    setActiveTool(tool);
+    analyticsService.trackEvent('tool_selected', { tool });
+  };
+
+  const handleColorSelect = (color: string) => {
+    setActiveColor(color);
+    setIsColorPickerOpen(false);
+    analyticsService.trackEvent('color_selected', { color });
+  };
 
   const handleAISubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!aiPrompt.trim()) return;
     
     setIsGenerating(true);
+    analyticsService.trackEvent('ai_generation_started', { promptLength: aiPrompt.length });
     await onAIRequest(aiPrompt);
     setIsGenerating(false);
     setIsAIModalOpen(false);
     setAiPrompt('');
+    analyticsService.trackEvent('ai_generation_completed');
+  };
+
+  const handleClearClick = () => {
+    setIsClearModalOpen(true);
   };
 
   const handleClearConfirm = () => {
     onClear();
     setIsClearModalOpen(false);
+    analyticsService.trackEvent('canvas_cleared');
+  };
+
+  const handleExportClick = () => {
+    onExport();
+    analyticsService.trackEvent('canvas_exported');
   };
 
   const tools = [
@@ -85,7 +158,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
             {tools.map((tool) => (
               <button
                 key={tool.id}
-                onClick={() => setActiveTool(tool.id)}
+                onClick={() => handleToolSelect(tool.id)}
                 className={`p-2.5 rounded-xl transition-all duration-200 relative group ${
                   activeTool === tool.id
                     ? 'bg-blue-600 text-white shadow-[0_0_15px_rgba(37,99,235,0.5)] scale-105'
@@ -106,19 +179,58 @@ export const Toolbar: React.FC<ToolbarProps> = ({
 
           {/* Properties */}
           <div className="flex items-center gap-3 px-2">
-            {/* Color Picker */}
-            <div className="flex items-center gap-1 flex-wrap max-w-xs">
-              {COLORS.map((color) => (
-                <button
-                  key={color}
-                  onClick={() => setActiveColor(color)}
-                  className={`w-6 h-6 rounded-full border-2 transition-transform ${
-                    activeColor === color ? 'border-white scale-110 shadow-lg' : 'border-transparent hover:scale-105'
+            {/* Collapsible Color Picker */}
+            <div className="relative" ref={colorPickerRef}>
+              <div className="flex items-center gap-2">
+                 <button
+                  onClick={toggleColorPicker}
+                  className={`w-8 h-8 rounded-full border-2 transition-all ${
+                    isColorPickerOpen ? 'border-white scale-110' : 'border-slate-600 hover:border-slate-400'
                   }`}
-                  style={{ backgroundColor: color }}
-                  title={color}
+                  style={{ backgroundColor: activeColor }}
+                  title="Current Color"
                 />
-              ))}
+                <button 
+                   onClick={toggleColorPicker}
+                   className={`w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white transition-transform ${isColorPickerOpen ? 'rotate-45' : ''}`}
+                   title="More Colors"
+                >
+                  <i className="fa-solid fa-plus text-xs"></i>
+                </button>
+              </div>
+
+              {createPortal(
+                <AnimatePresence>
+                  {isColorPickerOpen && (
+                    <motion.div
+                      ref={popupRef}
+                      initial={{ opacity: 0, scale: 0.9, y: 10 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.9, y: 10 }}
+                      style={{ 
+                        position: 'fixed',
+                        left: pickerPos.left,
+                        bottom: pickerPos.bottom,
+                        zIndex: 9999
+                      }}
+                      className="bg-slate-800 border border-slate-700 p-3 rounded-xl shadow-xl grid grid-cols-4 gap-2 w-48"
+                    >
+                      {COLORS.map((color) => (
+                        <button
+                          key={color}
+                          onClick={() => handleColorSelect(color)}
+                          className={`w-8 h-8 rounded-full border-2 transition-transform ${
+                            activeColor === color ? 'border-white scale-110 shadow-lg' : 'border-transparent hover:scale-105'
+                          }`}
+                          style={{ backgroundColor: color }}
+                          title={color}
+                        />
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>,
+                document.body
+              )}
             </div>
 
             {/* Stroke Width */}
@@ -149,7 +261,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
             </button>
             
             <button 
-              onClick={onExport}
+              onClick={handleExportClick}
               className="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition-colors"
               title="Export Image"
             >
@@ -157,7 +269,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
             </button>
             
             <button 
-              onClick={() => setIsClearModalOpen(true)}
+              onClick={handleClearClick}
               className="p-2 hover:bg-red-500/20 text-red-400 hover:text-red-300 rounded-lg transition-colors"
               title="Clear Canvas"
             >
@@ -211,50 +323,15 @@ export const Toolbar: React.FC<ToolbarProps> = ({
         </AnimatePresence>
       </div>
 
-      {/* Confirmation Modal */}
-      <AnimatePresence>
-        {isClearModalOpen && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center pointer-events-auto">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-              onClick={() => setIsClearModalOpen(false)}
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-slate-900 border border-slate-700 p-6 rounded-2xl shadow-2xl w-full max-w-md relative z-10 mx-4"
-            >
-              <div className="flex flex-col items-center text-center">
-                <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center mb-4 text-red-500">
-                  <i className="fa-solid fa-triangle-exclamation text-xl"></i>
-                </div>
-                <h3 className="text-xl font-semibold text-white mb-2">Clear Canvas?</h3>
-                <p className="text-slate-400 mb-6">
-                  Are you sure you want to delete everything? This action cannot be undone and will clear the board for all users.
-                </p>
-                <div className="flex gap-3 w-full">
-                  <button
-                    onClick={() => setIsClearModalOpen(false)}
-                    className="flex-1 px-4 py-2.5 rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white transition-colors font-medium"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleClearConfirm}
-                    className="flex-1 px-4 py-2.5 rounded-xl bg-red-600 text-white hover:bg-red-500 transition-colors font-medium shadow-lg shadow-red-900/20"
-                  >
-                    Delete Everything
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+      <ConfirmationModal
+        isOpen={isClearModalOpen}
+        onClose={() => setIsClearModalOpen(false)}
+        onConfirm={handleClearConfirm}
+        title="Clear Canvas?"
+        message="Are you sure you want to delete everything? This action will clear the board for all users."
+        confirmText="Delete Everything"
+        type="danger"
+      />
     </>
   );
 };
